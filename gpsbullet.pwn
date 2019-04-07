@@ -2,7 +2,7 @@
 
 #include <a_samp>
 #include <progress2>    
-#include <izcmd>
+#include <izcmd> // Change this to zcmd if you have already one
 
 #define FILTERSCRIPT
 
