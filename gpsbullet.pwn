@@ -1,9 +1,8 @@
-#define FILTERSCRIPT
-
 #include <a_samp>
-#include <foreach>     
 #include <progress2>    
-#include <zcmd>        
+#include <izcmd>
+
+#define FILTERSCRIPT
 
 #define BULLET_BATTERY_MIN       120 // 120 minutes, or 2 hours. This is the battery time.
 #define UPDATE_BULLET_POS_SEC    1 // 1 sec. How long will the GPS Bullet updates its position.
@@ -115,21 +114,27 @@ public OnPlayerDeath(playerid, killerid, reason)
 
 	if (BPlayer[playerid][GPSBulletvictim] == true)
 	{
-		foreach(new i: Player)
+		for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
 	    {
 		    if (BPlayer[i][GPSBulletusedon] == playerid)
 		    {
 		    	ResetVariables(playerid);
+
 		    	BPlayer[i][GPSBulletuser] = false;
                 BPlayer[i][GPSBulletusedon] = -1;
+
                 BPlayer[i][GPSBulletvictim] = false;
                 BPlayer[i][GPSBulletactivated] = false;
+
                 BatteryBulletswitch[i] = 0;
                 TrackBulletswitch[i] = 0;
+
                 KillTimer(BatteryTick[i]);
 		        KillTimer(GPSTick[i]);
+
 		        PlayerTextDrawHide(i, BulletTD[i]);
 		        HidePlayerProgressBar(i, Battery[i]);
+
 		        DisablePlayerCheckpoint(playerid);
 		    	SendClientMessage(playerid, -1, "Someone removed your GPS bullet, it could be a doctor!");
 		    }
@@ -156,12 +161,16 @@ public OnPlayerGiveDamage(playerid, damagedid, Float:amount, weaponid, bodypart)
 	{
 	    BPlayer[playerid][GPSBulletusedon] = damagedid; 
 		BPlayer[playerid][GPSBulletactivated] = true;
+
         BatteryBulletswitch[playerid] = 1;
 		TrackBulletswitch[playerid] = 1;
+
 	    SetPlayerProgressBarValue(playerid, Battery[playerid], 100);
         SetPlayerProgressBarColour(playerid, Battery[playerid], RGY[99]);
+
         ShowPlayerProgressBar(playerid, Battery[playerid]);
 	    PlayerTextDrawShow(playerid, BulletTD[playerid]);
+
 	    GPSTick[playerid] = SetTimerEx("BulletPPos", UPDATE_BULLET_POS_SEC*1000, true, "i", playerid); // Don't tamper with the 1000 value
         BatteryTick[playerid] = SetTimerEx("BatteryLife", 500, true, "i", playerid); // Don't tamper with the 600 value
 	}	
@@ -176,10 +185,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		{
 			if (listitem == 0)
 			{
-				if (BPlayer[playerid][GPSBulletuser] != false)
+				if (BPlayer[playerid][GPSBulletuser])
 					return SendClientMessage(playerid, -1, "Either you already bought one or have an active GPS bullet.");
 
-				if (BPlayer[playerid][GPSBulletactivated] == true)
+				if (BPlayer[playerid][GPSBulletactivated])
 					return SendClientMessage(playerid, -1, "You have an active GPS bullet.");
 
 
@@ -188,10 +197,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 			if (listitem == 1)
 			{
-				if (BPlayer[playerid][GPSBulletuser] == true)
+				if (BPlayer[playerid][GPSBulletuser])
 					return SendClientMessage(playerid, -1, "You haven't use your GPS bullet yet.");
 
-				if (BPlayer[playerid][GPSBulletactivated] != true)
+				if (!BPlayer[playerid][GPSBulletactivated])
 					return SendClientMessage(playerid, -1, "You have no active GPS bullet.");
 
 				ShowPlayerDialog(playerid, GPS_Bullet_Configure, DIALOG_STYLE_LIST, "Configure your Bullet", "Track Bullet\nCease Bullet\n{FFFF00}Toggle{FFFFFF} Battery Info", "Select", "SAMP 0.3.8");
@@ -208,10 +217,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				if (GetPlayerMoney(playerid) >= GPSB_SniperCost)
 				{
 					BPlayer[playerid][GPSBulletuser] = true;
+
 					GivePlayerMoney(playerid, -GPSB_SniperCost);
 			     	GivePlayerWeapon(playerid, 34, 1);
 				}
-				else SendClientMessage(playerid, -1, "You don't have a sufficient money.")	;
+				else SendClientMessage(playerid, -1, "You don't have a sufficient amount of money.")	;
 			}
 
 			if (listitem == 1)
@@ -219,10 +229,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				if (GetPlayerMoney(playerid) >= GPSB_PistolCost)
 				{
 					BPlayer[playerid][GPSBulletuser] = true;	
+
 					GivePlayerMoney(playerid, -GPSB_PistolCost);
 				    GivePlayerWeapon(playerid, 23, 1);
 				}
-				else SendClientMessage(playerid, -1, "You don't have a sufficient money.");	
+				else SendClientMessage(playerid, -1, "You don't have a sufficient amount of money.");	
 			}	
 		}
 	}
@@ -237,14 +248,16 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					TrackBulletswitch[playerid] = 0;
 					KillTimer(GPSTick[playerid]);
+
 					DisablePlayerCheckpoint(playerid);
-					SendClientMessage(playerid, -1, "GPS bullet position undisplayed on radar.");
+					SendClientMessage(playerid, -1, "GPS bullet position removed from radar.");
 				}
 				else
 				{
 					TrackBulletswitch[playerid] = 1;
+
 				    GPSTick[playerid] = SetTimerEx("BulletPPos", UPDATE_BULLET_POS_SEC*1000, true, "i", playerid); // Don't tamper with the 1000 value
-					SendClientMessage(playerid, -1, "GPS bullet position displayed on radar.");
+					SendClientMessage(playerid, -1, "GPS bullet position placed on radar.");
 				}	
 			}
 
@@ -300,14 +313,13 @@ CMD:gpsb(playerid, params[])
 
 // CUSTOM FUNCTIONS
 
-stock IsLawEnforcer(skinid) // Checks if a player is a law enforcer based from his/her skin.
+IsLawEnforcer(skinid) // Checks if a player is a law enforcer based from his/her skin.
 {
     switch(skinid)
     {
-        case 265..267, 280..288, 300..302, 306, 307, 309..311: return 1;
-        default: return 0;
+        case 265..267, 280..288, 300..302, 306, 307, 309..311: return true;
+        default: return false;
     }
-    return 0;
 }
 
 ResetVariables(playerid)
@@ -324,7 +336,7 @@ ResetVariables(playerid)
 forward BulletPPos(playerid);
 public BulletPPos(playerid)
 {
-	foreach(new i: Player)
+	for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
 	{
 		if (BPlayer[i][GPSBulletvictim] == true) continue;
 		if (BPlayer[playerid][GPSBulletusedon] == i)
@@ -349,7 +361,7 @@ public BatteryLife(playerid)
 
 	if (batterybar <= 0.0)
 	{
-		foreach(new i: Player)
+		for(new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
 		{
 			if (BPlayer[i][GPSBulletvictim] == true) continue;
 	     	if (BPlayer[playerid][GPSBulletusedon] == i)
