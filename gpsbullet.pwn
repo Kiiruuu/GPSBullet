@@ -1,3 +1,5 @@
+// https://github.com/Kiiruuu/GPSBullet
+
 #include <a_samp>
 #include <progress2>    
 #include <izcmd>
