@@ -4,6 +4,9 @@
 
 #define FILTERSCRIPT
 
+#undef MAX_PLAYERS
+#define MAX_PLAYERS              100 // Change this value to how many max players slot you have  
+
 #define BULLET_BATTERY_MIN       120 // 120 minutes, or 2 hours. This is the battery time.
 #define UPDATE_BULLET_POS_SEC    1 // 1 sec. How long will the GPS Bullet updates its position.
 
@@ -320,6 +323,7 @@ IsLawEnforcer(skinid) // Checks if a player is a law enforcer based from his/her
         case 265..267, 280..288, 300..302, 306, 307, 309..311: return true;
         default: return false;
     }
+    return 0;
 }
 
 ResetVariables(playerid)
